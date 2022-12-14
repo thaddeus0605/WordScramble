@@ -38,11 +38,6 @@ struct ContentView: View {
                             
                         }
                     }
-                    Section {
-                        Text("Score: \(score)")
-                    } header: {
-                        Text("Here is the total score: ")
-                    }
                 }
                 .navigationTitle(rootWord)
                 .onSubmit(addNewWord)
@@ -53,9 +48,15 @@ struct ContentView: View {
                     Text(errorMessage)
                 }
                 .toolbar {
-                    Button("New Game") {
-                        startGame()
-                    }
+                    Button("New Game", action: startGame)
+                }
+                .safeAreaInset(edge: .bottom) {
+                    Text("Score: \(score)")
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(.blue)
+                        .foregroundColor(.white)
+                        .font(.title)
                 }
         }
     }
@@ -84,6 +85,16 @@ struct ContentView: View {
             return
         }
         
+        guard wordIsGreaterThan3(word: transformWord) else {
+            wordError(title: "Entry needs to be longer.", message: "Your word should be greater than 3 characters")
+            return
+        }
+        
+        guard isSameAsRoot(word: transformWord) else {
+            wordError(title: "Choose a different word", message: "Thats the root word, please try again.")
+            return
+        }
+        
         withAnimation {
             usedWords.insert(transformWord, at: 0)
             score += transformWord.count
@@ -93,6 +104,13 @@ struct ContentView: View {
     }
     
     func startGame() {
+        
+        newWord = ""
+        usedWords.removeAll()
+        score = 0
+        
+        
+        
         //find start.txt in our bundle
         if let startFileURL = Bundle.main.url(forResource: "start", withExtension: "txt") {
             //load the file into a string
@@ -133,6 +151,14 @@ struct ContentView: View {
         let misspelledRange = checker.rangeOfMisspelledWord(in: word, range: range, startingAt: 0, wrap: false, language: "en")
         
         return misspelledRange.location == NSNotFound
+    }
+    
+    func wordIsGreaterThan3(word: String) -> Bool {
+        word.count <= 3 ? false : true
+    }
+    
+    func isSameAsRoot(word: String) -> Bool {
+        word == rootWord ? false : true
     }
     
     func wordError(title: String, message: String) {
